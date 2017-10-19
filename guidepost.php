@@ -259,16 +259,19 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
 ################################################################################
 {
   global $global_error_message;
+
   $database = new SQLite3('guidepost');
+
   if (!$database) {
-    $global_error_message = (file_exists('guidepost')) ? "Impossible to open, check permissions" : "Impossible to create, check permissions";
+    $global_error_message = (file_exists('guidepost')) ? "Impossible to open db, check permissions" : "Impossible to create db, check permissions";
     return 0;
   }
+
   $q = "insert into guidepost values (NULL, '$lat', '$lon', '$url', '$file', '$author', '$ref', '$note', '$license')";
 
   if (!$database->exec($q)) {
-    $global_error_message = "Error: " . $database->lastErrorMsg();
-    printdebug("insert_to_db(): insert guidepost error: " . $database->lastErrorMsg());
+    $global_error_message = "insert guidepost error: " . $database->lastErrorMsg();
+    printdebug("insert_to_db(): " . $global_error_message);
     return 0;
   }
 
@@ -276,16 +279,16 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
 
   $q = "insert into time (id, gp_id) values (NULL, $gp_id)";
   if (!$database->exec($q)) {
-    $global_error_message = "Error: " . $database->lastErrorMsg();
-    printdebug("insert_to_db(): insert time error: " . $database->lastErrorMsg());
+    $global_error_message = "insert time error: " . $database->lastErrorMsg();
+    printdebug("insert_to_db(): " . $global_error_message);
     return 0;
   }
 
   if ($ref != '' ) {
     $q = "insert into tags values (NULL, $gp_id, 'ref', '" . strtolower($ref) . "')";
     if (!$database->exec($q)) {
-      $global_error_message = "Error: " . $database->lastErrorMsg();
-      printdebug("insert_to_db(): insert tags.ref error: " . $database->lastErrorMsg());
+      $global_error_message = " insert tags ref error: " . $database->lastErrorMsg();
+      printdebug("insert_to_db(): " . $global_error_message);
       return 0;
     }
   }
@@ -309,8 +312,8 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
     if ($tag) {
       $q = "insert into tags values (NULL, $gp_id, '$tag', '')";
       if (!$database->exec($q)) {
-        $global_error_message = "Error: " . $database->lastErrorMsg();
-        printdebug("insert_to_db(): insert tags.$tag error: " . $database->lastErrorMsg());
+        $global_error_message = "tags: 1. $tag error: " . $database->lastErrorMsg();
+        printdebug("insert_to_db(): " . $global_error_message);
         return 0;
       }
     }
@@ -340,8 +343,8 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
         if ($tag) {
           $q = "insert into tags values (NULL, $gp_id, '$tag', '')";
           if (!$database->exec($q)) {
-            $global_error_message = "Error: " . $database->lastErrorMsg();
-            printdebug("insert_to_db(): insert tags.$tag error: " . $database->lastErrorMsg());
+            $global_error_message = "tags: 2. $tag error: " . $database->lastErrorMsg();
+            printdebug("insert_to_db(): " . $global_error_message);
             return 0;
           }
         }
@@ -595,7 +598,7 @@ function process_file()
 
   if ($result) {
     if (!insert_to_db($lat, $lon, $final_path, $file, $author, $ref, $note, $license, $gp_type, $gp_content)) {
-      $error_message = "failed to insert to db" . $global_error_message;
+      $error_message = "failed to insert to db: " . $global_error_message;
       $result = 0;
       if (!unlink ("uploads/$file")) {
         printdebug("$file cannot be deleted from upload, inserted successfuly");
