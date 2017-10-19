@@ -1,2 +1,1 @@
-# guidepost php upload script
-:wq
+php upload script for osmcz/api
