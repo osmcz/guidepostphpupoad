@@ -1,7 +1,7 @@
 <?php
 
 #   this file is part of Guideposts
-#   Copyright (C) 2014 - 2017 Michal Grezl
+#   Copyright (C) 2014 - 2018 Michal Grezl
 #                 2017 Marián Kyral
 #
 #   Guideposts is free software; you can redistribute it and/or modify
@@ -246,11 +246,11 @@ $title_help = "Pokud má obrázek Exif souřadnice, můžete nechat lat, lon na 
 </form>
 
 <table><tr>
-  <td><p style='border:10px solid #fff;'> id='upload_process'>Uploading...</p></td>
+  <td><p style='border:10px solid #fff;' id='upload_process'>Uploading...</p></td>
   <td><iframe id='upload_target' name='upload_target' src='#' style='width:200px;height:100px;border:10px solid #aaaaaa;'></iframe></td>
 </tr></table>
 \n";
-  //set widht and height to display debug output
+  //set width and height to display debug output
 
 }
 
@@ -259,19 +259,16 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
 ################################################################################
 {
   global $global_error_message;
-
   $database = new SQLite3('guidepost');
-
   if (!$database) {
-    $global_error_message = (file_exists('guidepost')) ? "Impossible to open db, check permissions" : "Impossible to create db, check permissions";
+    $global_error_message = (file_exists('guidepost')) ? "Impossible to open, check permissions" : "Impossible to create, check permissions";
     return 0;
   }
-
   $q = "insert into guidepost values (NULL, '$lat', '$lon', '$url', '$file', '$author', '$ref', '$note', '$license')";
 
   if (!$database->exec($q)) {
-    $global_error_message = "insert guidepost error: " . $database->lastErrorMsg();
-    printdebug("insert_to_db(): " . $global_error_message);
+    $global_error_message = "Error: " . $database->lastErrorMsg();
+    printdebug("insert_to_db(): insert guidepost error: " . $database->lastErrorMsg());
     return 0;
   }
 
@@ -279,16 +276,16 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
 
   $q = "insert into time (id, gp_id) values (NULL, $gp_id)";
   if (!$database->exec($q)) {
-    $global_error_message = "insert time error: " . $database->lastErrorMsg();
-    printdebug("insert_to_db(): " . $global_error_message);
+    $global_error_message = "Error: " . $database->lastErrorMsg();
+    printdebug("insert_to_db(): insert time error: " . $database->lastErrorMsg());
     return 0;
   }
 
   if ($ref != '' ) {
     $q = "insert into tags values (NULL, $gp_id, 'ref', '" . strtolower($ref) . "')";
     if (!$database->exec($q)) {
-      $global_error_message = " insert tags ref error: " . $database->lastErrorMsg();
-      printdebug("insert_to_db(): " . $global_error_message);
+      $global_error_message = "Error: " . $database->lastErrorMsg();
+      printdebug("insert_to_db(): insert tags.ref error: " . $database->lastErrorMsg());
       return 0;
     }
   }
@@ -312,8 +309,8 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
     if ($tag) {
       $q = "insert into tags values (NULL, $gp_id, '$tag', '')";
       if (!$database->exec($q)) {
-        $global_error_message = "tags: 1. $tag error: " . $database->lastErrorMsg();
-        printdebug("insert_to_db(): " . $global_error_message);
+        $global_error_message = "Error: " . $database->lastErrorMsg();
+        printdebug("insert_to_db(): insert 1 tags.$tag error: " . $database->lastErrorMsg());
         return 0;
       }
     }
@@ -343,8 +340,8 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
         if ($tag) {
           $q = "insert into tags values (NULL, $gp_id, '$tag', '')";
           if (!$database->exec($q)) {
-            $global_error_message = "tags: 2. $tag error: " . $database->lastErrorMsg();
-            printdebug("insert_to_db(): " . $global_error_message);
+            $global_error_message = "Error: " . $database->lastErrorMsg();
+            printdebug("insert_to_db(): insert 2 tags.$tag error: " . $database->lastErrorMsg());
             return 0;
           }
         }
@@ -412,6 +409,7 @@ function process_file()
 {
   global $_POST;
   global $global_error_message;
+  global $php_errormsg;
 
   $result = 0;
 
@@ -466,8 +464,9 @@ function process_file()
   printdebug("after $lat:$lon:$author:$license");
 
   $file = basename($filename);
-  $target_path = "uploads/" . $file;
-  $final_path = "img/guidepost/" . $file;
+  $target_path = "/var/www/api/uploads/" . $file;
+  $final_path = "/var/www/api/img/guidepost/" . $file;
+  $final_rel_path = "img/guidepost/" . $file;
 
   $target_path = preg_replace('/#/', '', $target_path);
   $target_path = preg_replace('/;/', '', $target_path);
@@ -541,19 +540,17 @@ function process_file()
     $result = 0;
   }
 
-  if ($result && file_exists("img/guidepost/$file")) {
+  if ($result && file_exists($final_path)) {
     $error_message = "file already exists ($file), please rename your copy";
     printdebug($error_message);
     $result = 0;
   }
 
   if ($result && !move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $target_path)) {
-    $error_message = "Chyba pri otevirani souboru, mozna je prilis velky";
+    $error_message = "Chyba pri presouvani souboru z apache upload to target";
     printdebug($error_message);
     $result = 0;
-  }
-
-  if ($result) {
+  } else {
     printdebug("File '$file' has been moved from tmp to $target_path");
   }
 
@@ -562,7 +559,6 @@ function process_file()
     printdebug($error_message);
     $result = 0;
   }
-
 
   // Check coordinates
   if ($result && $lat && $lon) {
@@ -590,28 +586,28 @@ function process_file()
     $result = 0;
   }
 
-  if ($result && !copy($target_path,$final_path)) {
-    $error_message = "failed to copy $target_path to destination $final_path ... ";
+  if ($result && !copy($target_path, $final_path)) {
+    $error_message = "failed to copy $target_path to $final_path . php: $php_errormsg";
     printdebug($error_message);
     $result = 0;
   }
 
   if ($result) {
-    if (!insert_to_db($lat, $lon, $final_path, $file, $author, $ref, $note, $license, $gp_type, $gp_content)) {
-      $error_message = "failed to insert to db: " . $global_error_message;
+    if (!insert_to_db($lat, $lon, $final_rel_path, $file, $author, $ref, $note, $license, $gp_type, $gp_content)) {
+      $error_message = "failed to insert to db:" . $global_error_message;
       $result = 0;
-      if (!unlink ("uploads/$file")) {
+      if (!unlink ($target_path)) {
         printdebug("$file cannot be deleted from upload, inserted successfuly");
       }
     }
   }
 
   if ($result && !unlink ("uploads/$file")) {
-        printdebug("$file cannot be deleted from upload, inserted successfuly");
+    printdebug("$file cannot be deleted from upload, inserted successfuly");
   }
 
   if (!$result) {
-      printdebug("Upload refused: ".$error_message);
+    printdebug("Upload refused: ".$error_message);
   }
 
   if ($result == 0 and $error_message == "") {
@@ -625,6 +621,7 @@ function process_file()
     print "  </head>\n";
     print "  <body>\n";
     print "
+  <p>konec</p>
   <div id='x'></div>
   <script language='javascript' type='text/javascript'>
     \$('#x').text('*** OK ***');
