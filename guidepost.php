@@ -260,13 +260,17 @@ function insert_to_db($lat, $lon, $url ,$file, $author, $ref, $note, $license, $
 ################################################################################
 {
   global $global_error_message;
-  $database = new SQLite3('guidepost');
+
+  $db_path = "/var/www/api/guidepost";
+  $database = new SQLite3($db_path);
+
   if (!$database) {
-    $global_error_message = (file_exists('guidepost')) ? "Impossible to open, check permissions" : "Impossible to create, check permissions";
+    $global_error_message = (file_exists($db_path)) ? "Impossible to open, check permissions" : "Impossible to create, check permissions";
+    printdebug("insert_to_db(): open " . $global_error_message);
     return 0;
   }
-  $q = "insert into guidepost values (NULL, '$lat', '$lon', '$url', '$file', '$author', '$ref', '$note', '$license')";
 
+  $q = "insert into guidepost values (NULL, '$lat', '$lon', '$url', '$file', '$author', '$ref', '$note', '$license')";
   if (!$database->exec($q)) {
     $global_error_message = "Error: " . $database->lastErrorMsg();
     printdebug("insert_to_db(): insert guidepost error: " . $database->lastErrorMsg());
