@@ -700,6 +700,8 @@ openlog('guidepostphpapi', LOG_PID, LOG_USER);
 
 $action = get_param("action");
 
+printdebug("PHPAPI request:" . $action);
+
 switch ($action) {
   case "show_dialog":
     page_header();
