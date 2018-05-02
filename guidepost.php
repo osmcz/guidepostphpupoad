@@ -49,7 +49,8 @@ function printdebug($x)
   $x = str_replace('?', '(question)',   $x);
   $x = str_replace('-', '(minus)',      $x);
 
-  system ("/usr/bin/logger -t guidepostapiphp '$x'");
+//  system ("/usr/bin/logger -t guidepostapiphp '$x'");
+  syslog(LOG_INFO, $x);
 }
 
 ################################################################################
@@ -691,6 +692,7 @@ $create_query = "CREATE TABLE changes (
  }
 */
 
+openlog('guidepostphpapi', LOG_PID, LOG_USER);
 
 $action = get_param("action");
 
@@ -709,6 +711,7 @@ switch ($action) {
     $bbox = get_param('bbox');
     if ($bbox == "") {
       printdebug("no bbox");
+      closelog();
       die("No bbox provided\n");
     } else {
       printdebug("bbox: " . $bbox);
@@ -732,9 +735,10 @@ switch ($action) {
       print json_encode($result);
     } else {
       printdebug("db open error: " + $err);
+      closelog();
       die($err);
     }
   break;
 }
-
+closelog();
 ?>
