@@ -463,7 +463,7 @@ function process_file()
   $lon = preg_replace('/,/', '\.', $lon);
   $lat = preg_replace('/[^0-9.]/', '', $lat);
   $lon = preg_replace('/[^0-9.]/', '', $lon);
-  $ref = preg_replace('/[^a-zA-Z0-9.,áčďéěíľňóřšťúůýžÁČĎÉĚÍĽŇÓŘŠŤÚŮÝŽ\/]/', '', $ref);
+  $ref = preg_replace('/[^a-zA-Z0-9.,;áčďéěíľňóřšťúůýžÁČĎÉĚÍĽŇÓŘŠŤÚŮÝŽ\/]/', '', $ref);
   $license = preg_replace('/[^CBYSA2340plus]/', '', $license);
 
   printdebug("after $lat:$lon:$author:$license");
